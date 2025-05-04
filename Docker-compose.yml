@@ -1,0 +1,82 @@
+
+
+version: "3.8"
+
+services:
+  myapp-mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=MyAppDb
+      - MYSQL_USER=myapp-user
+      - MYSQL_PASSWORD=password
+
+  authentication-service:
+    build:
+      context: ./authentication-service/
+    restart: on-failure
+    depends_on:
+      - myapp-mysql
+    ports:
+      - 8000:8000
+    environment:
+      - DATABASE_HOST=myapp-mysql
+      - DATABASE_USER=myapp-user
+      - DATABASE_PASSWORD=password
+      - DATABASE_NAME=MyAppDb
+      - DATABASE_PORT=3306
+      - GOOGLE_CLIENT_SECRET=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
+      - GOOGLE_CLIENT_ID=479092880681-aog780q8ohgf9218724o06ef2bbb8n6a.apps.googleusercontent.com
+      - JWT_SECRET=eiuvbveuiberiubiu34984353023crnincklebklufyif93fb
+      - SPRING_DATASOURCE_URL=jdbc:mysql://myapp-mysql:3306/authentication-service
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=12345678
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - EXTERNAL_URL=http://localhost:8000
+      - INTERNAL_URL=http://authentication-service:8000
+    networks:
+      - microservices-net
+
+  leave-management-service:
+    build:
+      context: ./leave-management-service/
+    restart: on-failure
+    depends_on:
+      - myapp-mysql
+    ports:
+      - 8081:8081
+    environment:
+      - JWT_SECRET=eiuvbveuiberiubiu34984353023crnincklebklufyif93fb
+      - SPRING_DATASOURCE_URL=jdbc:mysql://myapp-mysql:3306/leave-service
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=12345678
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+    networks:
+      - microservices-net
+
+  leave-man-fe:
+    build:
+      context: ./leave-man-fe/
+    restart: on-failure
+    depends_on:
+ #     - leave-management-service
+      - authentication-service
+    ports:
+      - 3000:3000
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - NEXT_PUBLIC_API_URL_2=http://localhost:8081/api
+      - NEXT_PUBLIC_API_URL_3=http://localhost:8000/api
+      - SMTP_SERVER_USERNAME="Africa HR"
+      - SMTP_SERVER_PASSWORD="wpqv ztcc znwf jidr"
+      - SITE_MAIL_RECIEVER=tuyisengetito3@gmail.com
+    networks:
+      - microservices-net
+
+networks:
+  microservices-net:
+    driver: bridge
+
+
